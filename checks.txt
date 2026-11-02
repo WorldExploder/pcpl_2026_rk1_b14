@@ -1,0 +1,12 @@
+$ python3 -m unittest -v
+test_b1_uses_one_to_many_and_sorts_by_disc (test_main.QueryTests.test_b1_uses_one_to_many_and_sorts_by_disc) ... ok
+test_b2_counts_one_to_many_and_sorts_by_count (test_main.QueryTests.test_b2_counts_one_to_many_and_sorts_by_count) ... ok
+test_b3_preserves_discs_without_links_and_uses_ids (test_main.QueryTests.test_b3_preserves_discs_without_links_and_uses_ids) ... ok
+test_b3_requires_suffix_at_end (test_main.QueryTests.test_b3_requires_suffix_at_end) ... ok
+test_b3_uses_many_to_many_and_filters_surname (test_main.QueryTests.test_b3_uses_many_to_many_and_filters_surname) ... ok
+test_empty_collections_and_library_without_discs (test_main.QueryTests.test_empty_collections_and_library_without_discs) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK

@@ -2,7 +2,7 @@
 
 import unittest
 
-from main import make_test_data, query_b1, query_b2, query_b3
+from main import CDDisc, CDLibrary, LibraryDisc, make_test_data, query_b1, query_b2, query_b3
 
 
 class QueryTests(unittest.TestCase):
@@ -26,12 +26,42 @@ class QueryTests(unittest.TestCase):
 
     def test_b3_uses_many_to_many_and_filters_surname(self):
         rows = query_b3(self.discs, self.libraries, self.library_discs)
-        self.assertEqual(len(rows), 4)
-        self.assertTrue(all(surname.endswith("ов") for surname, _, _ in rows))
         self.assertEqual(
-            {library for surname, _, library in rows if surname == "Иванов"},
-            {"Центральная фонотека", "Музыкальная медиатека"},
+            rows,
+            [
+                ("Иванов", "Акустические истории", ["Музыкальная медиатека", "Центральная фонотека"]),
+                ("Петров", "Городские ритмы", ["Центральная фонотека"]),
+                ("Смирнов", "Джазовые вечера", ["Музыкальная медиатека"]),
+            ],
         )
+
+    def test_empty_collections_and_library_without_discs(self):
+        self.assertEqual(query_b1([], []), [])
+        self.assertEqual(query_b2([], []), [])
+        self.assertEqual(query_b2([], [CDLibrary(9, "Пустая")]), [("Пустая", 0)])
+        self.assertEqual(query_b3([], [], []), [])
+
+    def test_b3_preserves_discs_without_links_and_uses_ids(self):
+        discs = [
+            CDDisc(1, "Одинаковое название", "ИВАНОВ", 40, 1),
+            CDDisc(2, "Одинаковое название", "Иванов", 42, 2),
+        ]
+        libraries = [CDLibrary(1, "Первая"), CDLibrary(2, "Вторая")]
+        self.assertEqual(
+            query_b3(discs, libraries, [LibraryDisc(2, 2)]),
+            [
+                ("ИВАНОВ", "Одинаковое название", []),
+                ("Иванов", "Одинаковое название", ["Вторая"]),
+            ],
+        )
+
+    def test_b3_requires_suffix_at_end(self):
+        discs = [
+            CDDisc(1, "Первый", "Иванова", 40, 1),
+            CDDisc(2, "Второй", "СИДОРОВ", 42, 1),
+        ]
+        self.assertEqual(query_b3(discs, [CDLibrary(1, "Фонд")], []),
+                         [("СИДОРОВ", "Второй", [])])
 
 
 if __name__ == "__main__":

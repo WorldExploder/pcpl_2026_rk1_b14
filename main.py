@@ -54,35 +54,43 @@ def query_b1(discs, libraries):
         for disc in discs
         if disc.library_id in library_by_id
     ]
-    return sorted(pairs, key=lambda pair: (pair[0], pair[1]))
+    return sorted(pairs, key=lambda pair: (pair[0].casefold(), pair[1].casefold()))
 
 
 def query_b2(discs, libraries):
     """Библиотеки и число их дисков по связи 1:N, по возрастанию."""
-    counts = {
-        library.id: sum(disc.library_id == library.id for disc in discs)
+    counts = [
+        (library.name, sum(disc.library_id == library.id for disc in discs))
         for library in libraries
-    }
+    ]
     return sorted(
-        [(library.name, counts[library.id]) for library in libraries],
-        key=lambda pair: (pair[1], pair[0]),
+        counts,
+        key=lambda pair: (pair[1], pair[0].casefold()),
     )
 
 
 def query_b3(discs, libraries, library_discs):
-    """Диски исполнителей на «ов» и библиотеки по связи M:N."""
-    disc_by_id = {disc.id: disc for disc in discs}
+    """Каждый диск исполнителя на «ов» и его библиотеки по связи M:N."""
     library_by_id = {library.id: library for library in libraries}
-    rows = [
-        (disc_by_id[link.disc_id].performer_surname,
-         disc_by_id[link.disc_id].title,
-         library_by_id[link.library_id].name)
-        for link in library_discs
-        if link.disc_id in disc_by_id
-        and link.library_id in library_by_id
-        and disc_by_id[link.disc_id].performer_surname.endswith("ов")
+    matching_discs = sorted(
+        (disc for disc in discs if disc.performer_surname.casefold().endswith("ов")),
+        key=lambda disc: (disc.performer_surname.casefold(), disc.title.casefold(), disc.id),
+    )
+    return [
+        (
+            disc.performer_surname,
+            disc.title,
+            sorted(
+                [
+                    library_by_id[link.library_id].name
+                    for link in library_discs
+                    if link.disc_id == disc.id and link.library_id in library_by_id
+                ],
+                key=str.casefold,
+            ),
+        )
+        for disc in matching_discs
     ]
-    return sorted(rows, key=lambda row: (row[0], row[1], row[2]))
 
 
 def main():
@@ -97,8 +105,8 @@ def main():
         print(f"  {library}: {count}")
 
     print("\nБ3. Исполнители на «ов» и библиотеки (M:N)")
-    for surname, title, library in query_b3(discs, libraries, library_discs):
-        print(f"  {surname} — {title} — {library}")
+    for surname, title, library_names in query_b3(discs, libraries, library_discs):
+        print(f"  {surname} — {title}: {', '.join(library_names) or 'нет библиотек'}")
 
 
 if __name__ == "__main__":
